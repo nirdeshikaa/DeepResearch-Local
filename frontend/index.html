@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DeepResearch | Local Research Assistant</title>
+
+    <meta
+        name="description"
+        content="A locally hosted RAG research assistant for exploring academic papers."
+    >
+
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+    <header class="site-header">
+        <div class="container header-inner">
+
+            <a class="brand" href="/">
+                <span class="brand-mark">D</span>
+
+                <span class="brand-text">
+                    DeepResearch
+                    <span class="local-badge">
+                        <span class="status-dot"></span>
+                        Local
+                    </span>
+                </span>
+            </a>
+
+            <nav class="header-nav">
+                <a href="#research">Research</a>
+                <a href="#upload">Add Paper</a>
+            </nav>
+
+        </div>
+    </header>
+
+
+    <main>
+
+        <!-- =================================================
+             HERO
+        ================================================== -->
+        <section class="hero">
+
+            <div class="container hero-inner">
+
+                <div class="eyebrow">
+                    PRIVATE · LOCAL · RESEARCH-FOCUSED
+                </div>
+
+                <h1>
+                    Understand research papers
+                    <span>without reading every page.</span>
+                </h1>
+
+                <p class="hero-description">
+                    Ask questions across your academic paper collection.
+                    DeepResearch retrieves relevant evidence and uses your
+                    locally running fine-tuned language model to generate
+                    a focused response.
+                </p>
+
+                <div class="hero-tags">
+                    <span>Qwen2.5</span>
+                    <span>LoRA</span>
+                    <span>RAG</span>
+                    <span>FAISS</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             RESEARCH QUESTION
+        ================================================== -->
+        <section
+            id="research"
+            class="section research-section"
+        >
+
+            <div class="container">
+
+                <div class="section-heading">
+                    <div>
+                        <p class="section-label">RESEARCH ASSISTANT</p>
+
+                        <h2>Ask your research collection</h2>
+
+                        <p>
+                            Enter a question and DeepResearch will retrieve
+                            relevant passages before generating an answer.
+                        </p>
+                    </div>
+
+                    <div
+                        id="systemStatus"
+                        class="system-status"
+                    >
+                        <span class="status-dot"></span>
+                        <span id="systemStatusText">
+                            Checking system...
+                        </span>
+                    </div>
+                </div>
+
+
+                <div class="workspace-grid">
+
+                    <!-- QUESTION PANEL -->
+                    <article class="panel question-panel">
+
+                        <div class="panel-heading">
+                            <span class="step-number">01</span>
+
+                            <div>
+                                <h3>Research question</h3>
+                                <p>
+                                    Ask a focused question about the
+                                    indexed papers.
+                                </p>
+                            </div>
+                        </div>
+
+                        <form id="queryForm">
+
+                            <label
+                                for="queryInput"
+                                class="field-label"
+                            >
+                                Your question
+                            </label>
+
+                            <textarea
+                                id="queryInput"
+                                name="query"
+                                rows="7"
+                                maxlength="1500"
+                                placeholder="For example: What are the main limitations of retrieval-augmented generation?"
+                                required
+                            ></textarea>
+
+                            <div class="form-footer">
+
+                                <span class="form-hint">
+                                    Answers may take around a minute on CPU.
+                                </span>
+
+                                <button
+                                    id="askButton"
+                                    class="primary-button"
+                                    type="submit"
+                                >
+                                    <span>Ask DeepResearch</span>
+                                    <span aria-hidden="true">→</span>
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </article>
+
+
+                    <!-- COLLECTION PANEL -->
+                    <aside class="panel collection-panel">
+
+                        <div class="panel-heading">
+                            <span class="step-number">02</span>
+
+                            <div>
+                                <h3>Knowledge base</h3>
+                                <p>
+                                    Local FAISS research collection.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <span class="stat-label">
+                                Searchable chunks
+                            </span>
+
+                            <strong id="chunkCount">—</strong>
+
+                            <span class="stat-note">
+                                Indexed locally
+                            </span>
+                        </div>
+
+                        <div class="privacy-note">
+                            <span class="privacy-icon">✓</span>
+
+                            <div>
+                                <strong>Local processing</strong>
+
+                                <p>
+                                    Retrieval and generation run on this
+                                    computer rather than a hosted inference
+                                    service.
+                                </p>
+                            </div>
+                        </div>
+
+                    </aside>
+
+                </div>
+
+
+                <!-- =========================================
+                     LOADING
+                ========================================== -->
+                <div
+                    id="loadingState"
+                    class="loading-card hidden"
+                    aria-live="polite"
+                >
+                    <div class="loader"></div>
+
+                    <div>
+                        <strong>Analysing your research collection</strong>
+
+                        <p>
+                            Retrieving relevant passages and generating
+                            a response with the local model...
+                        </p>
+                    </div>
+                </div>
+
+
+                <!-- =========================================
+                     ERROR
+                ========================================== -->
+                <div
+                    id="errorMessage"
+                    class="error-card hidden"
+                    role="alert"
+                ></div>
+
+
+                <!-- =========================================
+                     ANSWER
+                ========================================== -->
+                <section
+                    id="answerSection"
+                    class="results-section hidden"
+                >
+
+                    <article class="answer-card">
+
+                        <div class="result-header">
+
+                            <div>
+                                <p class="section-label">
+                                    GENERATED RESPONSE
+                                </p>
+
+                                <h2>Research answer</h2>
+                            </div>
+
+                            <span class="local-result-badge">
+                                Local model
+                            </span>
+
+                        </div>
+
+                        <div
+                            id="answerText"
+                            class="answer-text"
+                        ></div>
+
+                    </article>
+
+
+                    <article class="sources-card">
+
+                        <div class="result-header">
+
+                            <div>
+                                <p class="section-label">
+                                    RETRIEVED EVIDENCE
+                                </p>
+
+                                <h2>Sources used for retrieval</h2>
+                            </div>
+
+                        </div>
+
+                        <p class="source-disclaimer">
+                            These are retrieved source documents supplied
+                            to the model as context. They are not verified
+                            claim-level citations.
+                        </p>
+
+                        <div id="sourcesList"></div>
+
+                    </article>
+
+                </section>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             UPLOAD
+        ================================================== -->
+        <section
+            id="upload"
+            class="section upload-section"
+        >
+
+            <div class="container">
+
+                <div class="section-heading upload-heading">
+
+                    <div>
+                        <p class="section-label">DYNAMIC INGESTION</p>
+
+                        <h2>Add an academic paper</h2>
+
+                        <p>
+                            Upload a PDF to extract its text, create
+                            embeddings, and add its chunks to the local
+                            FAISS knowledge base.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="dropZone"
+                    class="upload-card"
+                >
+
+                    <input
+                        id="pdfInput"
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        hidden
+                    >
+
+                    <div class="upload-icon">
+                        ↑
+                    </div>
+
+                    <h3>Upload a research paper</h3>
+
+                    <p>
+                        Drag and drop a PDF here, or choose a file
+                        from your computer.
+                    </p>
+
+                    <button
+                        id="chooseFileButton"
+                        class="secondary-button"
+                        type="button"
+                    >
+                        Choose PDF
+                    </button>
+
+                    <span class="upload-note">
+                        PDF only · processed locally
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="uploadProgress"
+                    class="loading-card hidden"
+                >
+                    <div class="loader"></div>
+
+                    <div>
+                        <strong>Indexing paper</strong>
+
+                        <p>
+                            Extracting text, creating chunks and updating
+                            the local vector index...
+                        </p>
+                    </div>
+                </div>
+
+
+                <div
+                    id="uploadResult"
+                    class="upload-result hidden"
+                ></div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+    <footer class="site-footer">
+
+        <div class="container footer-inner">
+
+            <div>
+                <strong>DeepResearch</strong>
+
+                <p>
+                    Locally hosted academic research assistant.
+                </p>
+            </div>
+
+            <div class="footer-stack">
+                Qwen2.5 · LoRA · RAG · MiniLM · FAISS
+            </div>
+
+        </div>
+
+    </footer>
+
+
+    <script src="/static/app.js"></script>
+
+</body>
+</html>

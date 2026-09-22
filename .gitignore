@@ -1,0 +1,51 @@
+# ==========================================================
+# DeepResearch Local - Git exclusions
+# ==========================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Local language models
+models/*.gguf
+models/*.bin
+
+# Persistent FAISS data
+data/index/*
+!data/index/.gitkeep
+
+# User-uploaded research papers
+data/papers/*
+!data/papers/.gitkeep
+
+# Runtime logs
+*.log
+llama-server.log
+
+# Temporary files
+*.tmp
+*.temp
+*.backup
+*.bak
+
+# IDE
+.vscode/
+.idea/
+
+# Conversion workspace
+merged_for_gguf/
+
+# Third-party llama.cpp source clone used during GGUF conversion
+llama.cpp/
