@@ -225,21 +225,44 @@ function renderAnswer(answer, sources) {
         return;
     }
 
-    sources.forEach((source, index) => {
+    // Display each PDF only once.
+    // Multiple passages from the same PDF can still be used by RAG.
+    const uniqueSources = Array.from(
+        new Map(
+            sources.map(source => [
+                source.source || source.filename || "Unknown source",
+                source
+            ])
+        ).values()
+    );
+
+    uniqueSources.forEach((source, index) => {
         const item = document.createElement("div");
         item.className = "source-item";
 
         const rank = document.createElement("span");
         rank.className = "source-rank";
-        rank.textContent = String(source.rank ?? index + 1);
+        rank.textContent = String(index + 1);
 
         const details = document.createElement("div");
 
-        const filename = document.createElement("strong");
-        filename.textContent =
-            source.source ||
-            source.filename ||
-            "Unknown source";
+        const sourceName =
+    source.source ||
+    source.filename ||
+    "Unknown source";
+
+const filename = document.createElement("a");
+filename.textContent = sourceName + "  ↗ Open PDF";
+filename.href = `/api/papers/${encodeURIComponent(sourceName)}`;
+filename.target = "_blank";
+filename.rel = "noopener noreferrer";
+filename.className = "source-link";
+filename.title = "Open source PDF";
+
+filename.style.display = "inline-block";
+filename.style.cursor = "pointer";
+filename.style.textDecoration = "underline";
+filename.style.fontWeight = "700";
 
         const note = document.createElement("span");
 

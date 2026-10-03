@@ -65,7 +65,36 @@ app.mount(
 @app.get("/", include_in_schema=False)
 def serve_frontend():
     return FileResponse(FRONTEND_DIR / "index.html")
+@app.get("/api/papers/{filename}", include_in_schema=False)
+def serve_paper(filename: str):
+    # Prevent path traversal: only allow a plain filename.
+    safe_filename = Path(filename).name
 
+    if safe_filename != filename:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid filename."
+        )
+
+    # 1. Dynamically uploaded papers
+    uploaded_path = PROJECT_ROOT / "data" / "papers" / safe_filename
+
+    # 2. Original 226-paper research corpus
+    corpus_path = Path.home() / "deepresearch" / "papers" / safe_filename
+
+    for pdf_path in (uploaded_path, corpus_path):
+        if pdf_path.is_file() and pdf_path.suffix.lower() == ".pdf":
+            return FileResponse(
+                path=pdf_path,
+                media_type="application/pdf",
+                filename=safe_filename,
+                content_disposition_type="inline"
+            )
+
+    raise HTTPException(
+        status_code=404,
+        detail="Research paper not found."
+    )  
 
 @app.get("/api/health")
 def health_check():
